@@ -1,8 +1,5 @@
 var socket = io();
 var context = document.getElementById("root");
-var params = new URLSearchParams(window.location.search);
-
-
 buildMessage = (msg) => {
     var elem = document.createElement("div");
     elem.setAttribute("class","alert alert-primary");
@@ -14,62 +11,40 @@ buildMessage = (msg) => {
 }
 
 socket.on('updateListUsers', (list) => {
-    console.log(list)
+    updateListUsers(list);
 })
 
-socket.on('connect', function() {
+socket.on('sendPrivateMessage', (data) => {
+    console.log(data)
+    updateChatHistory(data)
+})
+
+socket.on('connect', () => {
     buildMessage("Conexión establecida con el servidor");
     let name = params.get("name");
     if(name){
         socket.emit('createConnection', {name} )
     }
+}, response => {
+    console.log(response)
 });
 
 socket.on('generalMessage', (message) => {
     buildMessage(message.message);
 })
 
-class Connection{
-    constructor(){
-
-    }
-
-    connect(){
-
-  
-    }
-
-    receiveMessage(){
-        socket.on('sendMessage', message => {
-            buildMessage(message.message);
-        })
-    }
-
-    sendMessage(message){
-        socket.emit('sendMessage', {
-            message: 'Hello server!',
-        }, (response) => {
-            console.log(response)
-        })
-    }
-
-    receiveGeneralAlert(){
-    
-    }
-
-    buildGeneralAlert(){
-        socket.emit('generalMessage', {
-            message: "Hola a todos!" 
-        }, (response => {
-            buildMessage(response.message);
-        }))
-    }
-}
-
 
 socket.on('disconnect', function(){
     
 })
+
+/***
+ * Private messages
+ */
+
+ sendMessageTo = (data) => {
+     socket.emit('sendMessageTo', data);
+ }
 
 
 

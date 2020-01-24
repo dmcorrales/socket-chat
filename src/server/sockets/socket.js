@@ -4,11 +4,9 @@ const Session = require("../classes/session");
 const currentSession = new Session();
 io.on('connection', socket => {
     console.log('Nueva conexión establecida.');
-
-    socket.on('createConnection', (data) =>{
-        console.log(socket.id)
+    socket.on('createConnection', (data, callback) =>{
         currentSession.connect({name: data.name, id:socket.id });
-        socket.broadcast.emit('updateListUsers', currentSession.getUsersByRoom(1))
+        io.emit('updateListUsers', currentSession.getUsersByRoom(1))
     })
 
     socket.on('disconnect', () => {
@@ -16,7 +14,9 @@ io.on('connection', socket => {
         socket.broadcast.emit('generalMessage',{
             message: `El usuario ${user.name} abandonó el chat`,
         })
+        socket.broadcast.emit('updateListUsers', currentSession.getUsersByRoom(1))
     });
+    
 
     socket.on('generalMessage', (data, callback) => {
         if(data.message)
@@ -45,6 +45,11 @@ io.on('connection', socket => {
             })
 
     });
+
+    socket.on('sendMessageTo', (data) => {
+        socket.broadcast.to(currentSession.findSocketIdByUsername(data.join)).emit('sendPrivateMessage', {data});
+        socket.emit('sendPrivateMessage', {data});
+    })
 
     socket.emit('sendMessage', {
         message: 'Hola cliente!'
